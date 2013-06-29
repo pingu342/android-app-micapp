@@ -1,0 +1,173 @@
+<?xml version="1.0" encoding="utf-8"?>
+<LinearLayout xmlns:android="http://schemas.android.com/apk/res/android"
+	android:orientation="vertical"
+	android:layout_width="fill_parent"
+	android:layout_height="fill_parent" >
+	<TextView  
+		android:layout_width="fill_parent" 
+		android:layout_height="wrap_content" 
+		android:text="TextView"
+		android:textSize="18sp"
+		android:layout_margin="5dip"
+		android:id="@+id/StatusView" />
+	<ScrollView
+		android:layout_height="fill_parent"
+		android:layout_width="fill_parent">
+		<LinearLayout
+			android:orientation="vertical"
+			android:layout_width="fill_parent"
+			android:layout_height="fill_parent" >
+			<TextView  
+				android:layout_width="fill_parent" 
+				android:layout_height="wrap_content" 
+				android:textSize="18sp"
+				android:layout_margin="5dip"
+				android:text="オーディオモード：" />
+			<RadioGroup android:id="@+id/AudioModeRadioGroup"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content">
+				<RadioButton android:id="@+id/AudioModeRadioButton_Normal"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:text="MODE_NORMAL" />
+				<RadioButton android:id="@+id/AudioModeRadioButton_Ringtone"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:text="MODE_RINGTONE" />
+				<RadioButton android:id="@+id/AudioModeRadioButton_InCall"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:text="MODE_IN_CALL" />
+				<RadioButton android:id="@+id/AudioModeRadioButton_InCommunication"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:text="MODE_IN_COMMUNICATION" />
+			</RadioGroup>
+			<View
+				android:layout_width="fill_parent"
+				android:layout_height="18dp">
+			</View>
+			<TextView  
+				android:layout_width="fill_parent" 
+				android:layout_height="wrap_content" 
+				android:textSize="18sp"
+				android:layout_margin="5dip"
+				android:text="オーディオストリームタイプ：" />
+			<RadioGroup android:id="@+id/AudioStreamTypeRadioGroup"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content">
+				<RadioButton android:id="@+id/AudioStreamTypeRadioButton_VoiceCall"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:text="STREAM_VOICE_CALL" />
+				<RadioButton android:id="@+id/AudioStreamTypeRadioButton_Music"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:text="STREAM_MUSIC" />
+				<RadioButton android:id="@+id/AudioStreamTypeRadioButton_Ring"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:text="STREAM_RING" />
+			</RadioGroup>
+			<View
+				android:layout_width="fill_parent"
+				android:layout_height="18dp">
+			</View>
+			<TextView  
+				android:layout_width="fill_parent" 
+				android:layout_height="wrap_content" 
+				android:textSize="18sp"
+				android:layout_margin="5dip"
+				android:text="ヘッドセット監視方法：" />
+			<RadioGroup android:id="@+id/HeadsetMoniteringMethodRadioGroup"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content">
+				<RadioButton android:id="@+id/HeadsetMoniteringMethodRadioButton_BroadcastReceiver1"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:text="BroadcastReceiver" />
+				<RadioButton android:id="@+id/HeadsetMoniteringMethodRadioButton_BroadcastReceiver2"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:text="BroadcastReceiver + isWiredHeadset" />
+				<RadioButton android:id="@+id/HeadsetMoniteringMethodRadioButton_Polling"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:text="isWiredHeadsetOnをポーリング" />
+			</RadioGroup>
+			<View
+				android:layout_width="fill_parent"
+				android:layout_height="18dp">
+			</View>
+			<TextView 
+				android:id="@+id/VolumeSeekBarStatus"
+				android:layout_width="fill_parent" 
+				android:layout_height="wrap_content" 
+				android:textSize="18sp"
+				android:layout_margin="5dip"
+				android:text="" />
+			<SeekBar
+				android:id="@+id/VolumeSeekBar"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content"
+				android:layout_marginLeft="30dp"
+				android:layout_marginRight="30dip" />
+			<View
+				android:layout_width="fill_parent"
+				android:layout_height="18dp">
+			</View>
+			<CheckBox android:id="@+id/AutoSpeakerOffCheckbox"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content"
+				android:text="有線ヘッドセット接続時は自動的にスピーカーをOFF" />
+			<CheckBox android:id="@+id/AutoSpeakerOnCheckbox"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content"
+				android:text="有線ヘッドセット取外し時は自動的にスピーカーをON" />
+			<CheckBox android:id="@+id/AudioIOAutoRestart_Speaker_Checkbox"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content"
+				android:text="スピーカーON/OFF変更時は自動的にオーディオ入出力をリスタート" />
+			<CheckBox android:id="@+id/AudioIOAutoRestart_Headset_Checkbox"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content"
+				android:text="有線ヘッドセット接続状態変化時は自動的にオーディオ入出力をリスタート" />
+			<CheckBox android:id="@+id/MicMuteCheckbox"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content"
+				android:text="マイクをミュート" />
+			<CheckBox android:id="@+id/BluetoothScoOnCheckbox"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content"
+				android:text="Bluetooth SCO ヘッドセットをON" />
+			<View
+				android:layout_width="fill_parent"
+				android:layout_height="18dp">
+			</View>
+			<Button
+				android:text="Button"
+				android:id="@+id/ToggleStartStopButton"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content">
+			</Button>
+			<Button
+				android:text="Button"
+				android:id="@+id/ToggleNoiseOnButton"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content">
+			</Button>
+			<Button
+				android:text="Button"
+				android:id="@+id/ToggleSpeakerOnButton"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content">
+			</Button>
+			<Button
+				android:text="Button"
+				android:id="@+id/UpdateUIButton"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content">
+			</Button>
+		</LinearLayout>
+	</ScrollView>
+</LinearLayout>

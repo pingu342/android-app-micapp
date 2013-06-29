@@ -1,0 +1,196 @@
+package jp.saka.micapp;
+
+import android.content.Context;
+import android.app.Activity;
+import android.os.Bundle;
+import android.view.View;
+import android.view.View.OnClickListener;
+import android.widget.TextView;
+import android.widget.Button;
+import android.media.MediaRecorder;
+import android.media.AudioManager;
+import android.media.AudioTrack;
+import android.media.AudioTrack.OnPlaybackPositionUpdateListener;
+import android.media.AudioRecord;
+import android.media.AudioFormat;
+import android.util.Log;
+import java.lang.InterruptedException;
+import android.os.Handler;
+
+public class MicApp extends Activity
+{
+    private TextView status_view;
+    private Button start_stop_button;
+    private Button speaker_on_button;
+    private Button update_ui_button;
+    private int sample_rate = 44100;
+    private AudioTrack track;
+    private AudioRecord record;
+    private int in_buffsize;
+    private int out_buffsize;
+    private short[] buf;
+    private static boolean started = false;
+    private AudioManager mAudioManager;
+    private Handler handler;
+    private boolean thread_loop;
+
+    private void update_button()
+    {
+        String status = "";
+
+        if (started) {
+            status += "ただいま動作中. ";
+            start_stop_button.setText("(´・ω・`) 終了する");
+        } else {
+            status += "ただいま停止中. ";
+            start_stop_button.setText("(´・ω・`) 開始する");
+        }
+
+        if (mAudioManager.isSpeakerphoneOn()) {
+            status += "SpeakerはONです. ";
+            speaker_on_button.setText("スピーカをOFFする");
+        } else {
+            status += "SpeakerはOFFです. ";
+            speaker_on_button.setText("スピーカをONする");
+        }
+
+        if (mAudioManager.isWiredHeadsetOn()) {
+            status += "Headsetあります. ";
+        } else {
+            status += "Headsetありません. ";
+        }
+
+        status_view.setText(status);
+
+        update_ui_button.setText("ヘッドセットを確認する");
+    }
+
+    /**
+     * サポートされているSampleRate/Format/Channelをチェックするメソッド
+     */
+    private static int[] mSampleRates = new int[] { 8000, 11025, 22050, 44100 };
+    public AudioRecord findAudioRecord() {
+        for (int rate : mSampleRates) {
+            for (short audioFormat : new short[] { AudioFormat.ENCODING_PCM_8BIT, AudioFormat.ENCODING_PCM_16BIT }) {
+                for (short channelConfig : new short[] { AudioFormat.CHANNEL_IN_MONO, AudioFormat.CHANNEL_IN_STEREO }) {
+                    try {
+                        Log.d("sakalog", "Attempting rate " + rate + "Hz, bits: " + audioFormat + ", channel: "
+                                + channelConfig);
+                        int bufferSize = AudioRecord.getMinBufferSize(rate, channelConfig, audioFormat);
+
+                        if (bufferSize != AudioRecord.ERROR_BAD_VALUE) {
+                            // check if we can instantiate and have a success
+                            AudioRecord recorder = new AudioRecord(MediaRecorder.AudioSource.MIC, rate, channelConfig, audioFormat, bufferSize);
+
+                            if (recorder.getState() == AudioRecord.STATE_INITIALIZED) {
+                                // return recorder;
+                                Log.d("sakalog", "ok!");
+                            }
+                        }
+                    } catch (Exception e) {
+                        Log.e("sakalog", rate + "Exception, keep trying.",e);
+                    }
+                }
+            }
+        }
+        return null;
+    }
+
+    @Override
+    public void onCreate(Bundle savedInstanceState)
+    {
+        super.onCreate(savedInstanceState);
+        setContentView(R.layout.main);
+
+        // android.os.Process.setThreadPriority(android.os.Process.THREAD_PRIORITY_URGENT_AUDIO);
+
+        in_buffsize = AudioRecord.getMinBufferSize(sample_rate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT);
+        out_buffsize = AudioTrack.getMinBufferSize(sample_rate, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT);
+        Log.d("sakalog", "in_buffsize=" + String.valueOf(in_buffsize));
+        Log.d("sakalog", "out_buffsize=" + String.valueOf(out_buffsize));
+
+        //　バッファサイズは大きい方に合わせる
+        if (in_buffsize < out_buffsize) {
+            in_buffsize = out_buffsize;
+        } else {
+            out_buffsize = in_buffsize;
+        }
+
+        buf = new short[out_buffsize/2];
+
+        record = new AudioRecord(MediaRecorder.AudioSource.MIC, sample_rate, AudioFormat.CHANNEL_IN_MONO, AudioFormat.ENCODING_PCM_16BIT, in_buffsize );
+        if (record == null) {
+            return;
+        }
+
+        track = new AudioTrack(AudioManager.STREAM_VOICE_CALL, sample_rate, AudioFormat.CHANNEL_OUT_MONO, AudioFormat.ENCODING_PCM_16BIT, out_buffsize, AudioTrack.MODE_STREAM);
+        if (track == null) {
+            return;
+        }
+
+        mAudioManager = ((AudioManager) getSystemService(Context.AUDIO_SERVICE));
+        mAudioManager.setSpeakerphoneOn(true);
+
+        handler = new Handler();
+        start_stop_button = (Button) findViewById(R.id.ToggleStartStopButton);
+        speaker_on_button = (Button) findViewById(R.id.ToggleSpeakerOnButton);
+        update_ui_button = (Button) findViewById(R.id.UpdateUIButton);
+        status_view = (TextView) findViewById(R.id.StatusView);
+
+        update_button();
+
+        speaker_on_button.setOnClickListener(new OnClickListener() {
+            public void onClick(View v) {
+                boolean bl = !mAudioManager.isSpeakerphoneOn();
+                Log.d("sakalog", "setSpeakerphoneOn(" + bl + ")");
+                mAudioManager.setSpeakerphoneOn(bl);
+                update_button();
+            }
+        });
+
+        update_ui_button.setOnClickListener(new OnClickListener() {
+            public void onClick(View v) {
+                update_button();
+            }
+        });
+
+        start_stop_button.setOnClickListener(new OnClickListener() {
+            public void onClick(View v) {
+                synchronized (this) {
+                    if (!started) {
+                        started = true;
+                        thread_loop = true;
+                        update_button();
+                        (new Thread(new Runnable() {
+                            @Override
+                            public void run() {
+                                record.startRecording();
+                                track.play();
+                                while (thread_loop) {
+                                    int read_size = record.read(buf, 0, buf.length);
+                                    if (read_size > 0) {
+                                        int write_size = track.write(buf, 0, read_size);
+                                        int sleep_for_ns = read_size*(1000000/44100);
+                                        try {
+                                            Thread.sleep(0, sleep_for_ns);
+                                        } catch (InterruptedException e) {
+                                            break;
+                                        }
+                                    }
+                                }
+                                handler.post( new Runnable() {
+                                    public void run() {
+                                        started = false;
+                                        update_button();
+                                    }
+                                });
+                            }
+                        })).start();
+                    } else {
+                        thread_loop = false;
+                    }
+                }
+            }
+        });
+    }
+}
