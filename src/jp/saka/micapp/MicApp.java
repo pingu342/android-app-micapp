@@ -496,6 +496,17 @@ public class MicApp extends Activity
 		update_view();
 	}
 
+	@Override
+	public void onDestroy() {
+		super.onDestroy();
+		if (headset_monitering_bc_recver != null) {
+			unregisterReceiver(headset_monitering_bc_recver);
+			headset_monitering_bc_recver = null;
+		}
+		headset_moniter_thread_loop = false;
+		audio_io_thread_loop = false;
+	}
+
 	private void update_headset_monitering_method()
 	{
 		int radio_id = headset_monitering_method_radio_group.getCheckedRadioButtonId();
