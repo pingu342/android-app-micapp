@@ -32,3 +32,13 @@ gen/R.java.d
 gen/jp/saka/micapp/BuildConfig.java
 
 gen/jp/saka/micapp/R.java
+
+.*.swp
+
+*.*~
+
+*.class
+
+bin/*
+
+gen/*
