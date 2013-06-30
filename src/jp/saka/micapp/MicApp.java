@@ -429,20 +429,30 @@ public class MicApp extends Activity
 
 		// オーディオモードを選択するラジオボタンの初期値をMODE_NORAMLにする
 		// ラジオボタンが変更されたときはオーディオモードを変更する
-		audio_mode_radio_group.check(R.id.AudioModeRadioButton_Normal);
+		int mode = audio_manager.getMode();
+		if (mode == AudioManager.MODE_NORMAL) {
+			audio_mode_radio_group.check(R.id.AudioModeRadioButton_Normal);
+		} else if (mode == AudioManager.MODE_RINGTONE) {
+			audio_mode_radio_group.check(R.id.AudioModeRadioButton_Ringtone);
+		} else if (mode == AudioManager.MODE_IN_CALL) {
+			audio_mode_radio_group.check(R.id.AudioModeRadioButton_InCall);
+		} else if (mode == AudioManager.MODE_IN_COMMUNICATION) {
+			audio_mode_radio_group.check(R.id.AudioModeRadioButton_InCommunication);
+		}
 		audio_mode_radio_group.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
 			public void onCheckedChanged(RadioGroup group, int id) { 
 				int radio_id = audio_mode_radio_group.getCheckedRadioButtonId();
-				if (radio_id == R.id.AudioModeRadioButton_Normal) {
+				int mode = audio_manager.getMode();
+				if (radio_id == R.id.AudioModeRadioButton_Normal && mode != AudioManager.MODE_NORMAL) {
 					Log.d("sakalog", "setMode(MODE_NORMAL)");
 					audio_manager.setMode(AudioManager.MODE_NORMAL);
-				} else if (radio_id == R.id.AudioModeRadioButton_Ringtone) {
+				} else if (radio_id == R.id.AudioModeRadioButton_Ringtone && mode != AudioManager.MODE_RINGTONE) {
 					Log.d("sakalog", "setMode(MODE_RINGTONE)");
 					audio_manager.setMode(AudioManager.MODE_RINGTONE);
-				} else if (radio_id == R.id.AudioModeRadioButton_InCall) {
+				} else if (radio_id == R.id.AudioModeRadioButton_InCall && mode != AudioManager.MODE_IN_CALL) {
 					Log.d("sakalog", "setMode(MODE_IN_CALL)");
 					audio_manager.setMode(AudioManager.MODE_IN_CALL);
-				} else if (radio_id == R.id.AudioModeRadioButton_InCommunication) {
+				} else if (radio_id == R.id.AudioModeRadioButton_InCommunication && mode != AudioManager.MODE_IN_COMMUNICATION) {
 					Log.d("sakalog", "setMode(MODE_IN_COMMUNICATION)");
 					audio_manager.setMode(AudioManager.MODE_IN_COMMUNICATION);
 				}
