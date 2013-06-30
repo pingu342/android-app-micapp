@@ -723,7 +723,10 @@ public class MicApp extends Activity
 							// オーディオ入出力の開始
 							do {
 								if (audio_record == null) {
-									audio_record = new AudioRecord(MediaRecorder.AudioSource.MIC,
+									// 2013.6.30
+									// ELUGA PでMODE_IN_COMMUNICATIONセット時、AudioRecordからの音のレベルが0(無音)になる
+									// MediaRecorder.AudioSource.MIC > VOICE_COMMUNICATION に変更
+									audio_record = new AudioRecord(MediaRecorder.AudioSource.VOICE_COMMUNICATION,
 											sample_rate,
 											AudioFormat.CHANNEL_IN_MONO,
 											AudioFormat.ENCODING_PCM_16BIT,
