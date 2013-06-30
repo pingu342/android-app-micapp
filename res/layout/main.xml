@@ -69,6 +69,32 @@
 					android:layout_height="wrap_content"
 					android:text="STREAM_RING" />
 			</RadioGroup>
+			<TextView  
+				android:layout_width="fill_parent" 
+				android:layout_height="wrap_content" 
+				android:textSize="18sp"
+				android:layout_margin="5dip"
+				android:text="オーディオソースタイプ：" />
+			<RadioGroup android:id="@+id/AudioSourceTypeRadioGroup"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content">
+				<RadioButton android:id="@+id/AudioSourceTypeRadioButton_Default"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:text="DEFAULT" />
+				<RadioButton android:id="@+id/AudioSourceTypeRadioButton_Mic"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:text="MIC" />
+				<RadioButton android:id="@+id/AudioSourceTypeRadioButton_VoiceCall"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:text="VOICE_CALL" />
+				<RadioButton android:id="@+id/AudioSourceTypeRadioButton_VoiceCommunication"
+					android:layout_width="wrap_content"
+					android:layout_height="wrap_content"
+					android:text="VOICE_COMMUNICATION" />
+			</RadioGroup>
 			<View
 				android:layout_width="fill_parent"
 				android:layout_height="18dp">

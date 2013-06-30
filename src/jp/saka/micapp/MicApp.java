@@ -47,6 +47,7 @@ public class MicApp extends Activity
 	private RadioGroup audio_mode_radio_group;
 	private RadioGroup audio_stream_type_radio_group;
 	private RadioGroup headset_monitering_method_radio_group;
+	private RadioGroup audio_source_type_radio_group;
 	private SeekBar volume_seek_bar;
 	private final int sample_rate = 16000;
 	private AudioTrack audio_track = null;
@@ -289,6 +290,7 @@ public class MicApp extends Activity
 		audio_mode_radio_group = (RadioGroup) findViewById(R.id.AudioModeRadioGroup);
 		audio_stream_type_radio_group = (RadioGroup) findViewById(R.id.AudioStreamTypeRadioGroup);
 		headset_monitering_method_radio_group = (RadioGroup) findViewById(R.id.HeadsetMoniteringMethodRadioGroup);
+		audio_source_type_radio_group = (RadioGroup) findViewById(R.id.AudioSourceTypeRadioGroup);
 		volume_seek_bar_status_view = (TextView) findViewById(R.id.VolumeSeekBarStatus);
 		volume_seek_bar = (SeekBar) findViewById(R.id.VolumeSeekBar);
 		auto_speaker_off_checkbox = (CheckBox) findViewById(R.id.AutoSpeakerOffCheckbox);
@@ -470,6 +472,12 @@ public class MicApp extends Activity
 		headset_monitering_method_radio_group.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
 			public void onCheckedChanged(RadioGroup group, int id) { 
 				update_headset_monitering_method();
+			}
+		});
+
+		audio_source_type_radio_group.check(R.id.AudioSourceTypeRadioButton_Default);
+		audio_source_type_radio_group.setOnCheckedChangeListener(new RadioGroup.OnCheckedChangeListener() {
+			public void onCheckedChanged(RadioGroup group, int id) { 
 			}
 		});
 
@@ -713,10 +721,15 @@ public class MicApp extends Activity
 				// 内部フラグを更新して、テキストビュー、ボタン、ラジオボタン、シークバーの表示を更新する
 				audio_io_running = true;
 				audio_io_thread_loop = true;
-				// オーディオ入出力が動作中は、オーディオストリーム選択のラジオボタンを変更不可にする
+				// オーディオ入出力が動作中は、オーディオストリーム選択、オーディオソース選択のラジオボタンを変更不可にする
 				((RadioButton) findViewById(R.id.AudioStreamTypeRadioButton_Music)).setEnabled(false); 
 				((RadioButton) findViewById(R.id.AudioStreamTypeRadioButton_VoiceCall)).setEnabled(false); 
 				((RadioButton) findViewById(R.id.AudioStreamTypeRadioButton_Ring)).setEnabled(false); 
+				((RadioButton) findViewById(R.id.AudioSourceTypeRadioButton_Default)).setEnabled(false); 
+				((RadioButton) findViewById(R.id.AudioSourceTypeRadioButton_Mic)).setEnabled(false); 
+				((RadioButton) findViewById(R.id.AudioSourceTypeRadioButton_VoiceCall)).setEnabled(false); 
+				((RadioButton) findViewById(R.id.AudioSourceTypeRadioButton_VoiceCommunication)).setEnabled(false); 
+				final int audio_src_radio_button_id = audio_source_type_radio_group.getCheckedRadioButtonId();
 				update_view();
 
 				// オーディオ入出力スレッドを開始する
@@ -747,7 +760,19 @@ public class MicApp extends Activity
 									// 2013.6.30
 									// ELUGA PでMODE_IN_COMMUNICATIONセット時、AudioRecordからの音のレベルが0(無音)になる
 									// MediaRecorder.AudioSource.MIC > VOICE_COMMUNICATION に変更
-									audio_record = new AudioRecord(MediaRecorder.AudioSource.VOICE_COMMUNICATION,
+									// 2013.6.30
+									// ラジオボタンで選択に変更
+									int audio_source = MediaRecorder.AudioSource.DEFAULT;
+									if (audio_src_radio_button_id == R.id.AudioSourceTypeRadioButton_Default) {
+										audio_source = MediaRecorder.AudioSource.DEFAULT;
+									} else if (audio_src_radio_button_id == R.id.AudioSourceTypeRadioButton_Mic) {
+										audio_source = MediaRecorder.AudioSource.MIC;
+									} else if (audio_src_radio_button_id == R.id.AudioSourceTypeRadioButton_VoiceCall) {
+										audio_source = MediaRecorder.AudioSource.VOICE_CALL;
+									} else if (audio_src_radio_button_id == R.id.AudioSourceTypeRadioButton_VoiceCommunication) {
+										audio_source = MediaRecorder.AudioSource.VOICE_COMMUNICATION;
+									}
+									audio_record = new AudioRecord(audio_source,
 											sample_rate,
 											AudioFormat.CHANNEL_IN_MONO,
 											AudioFormat.ENCODING_PCM_16BIT,
@@ -878,6 +903,10 @@ public class MicApp extends Activity
 								((RadioButton) findViewById(R.id.AudioStreamTypeRadioButton_Music)).setEnabled(true); 
 								((RadioButton) findViewById(R.id.AudioStreamTypeRadioButton_VoiceCall)).setEnabled(true); 
 								((RadioButton) findViewById(R.id.AudioStreamTypeRadioButton_Ring)).setEnabled(true); 
+								((RadioButton) findViewById(R.id.AudioSourceTypeRadioButton_Default)).setEnabled(true); 
+								((RadioButton) findViewById(R.id.AudioSourceTypeRadioButton_Mic)).setEnabled(true); 
+								((RadioButton) findViewById(R.id.AudioSourceTypeRadioButton_VoiceCall)).setEnabled(true); 
+								((RadioButton) findViewById(R.id.AudioSourceTypeRadioButton_VoiceCommunication)).setEnabled(true); 
 								Toast.makeText(micapp_activity, toast_msg, Toast.LENGTH_SHORT).show();
 							}
 						});
