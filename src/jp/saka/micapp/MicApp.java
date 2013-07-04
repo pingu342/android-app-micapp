@@ -28,6 +28,10 @@ import android.view.KeyEvent;
 import android.widget.Toast;
 import android.widget.CheckBox;
 
+import android.net.Uri;
+import android.media.RingtoneManager;
+import android.media.MediaPlayer;
+
 import android.bluetooth.BluetoothProfile;
 import android.bluetooth.BluetoothDevice;
 
@@ -38,6 +42,7 @@ public class MicApp extends Activity
 	private TextView status_view;
 	private TextView volume_seek_bar_status_view;
 	private Button start_stop_button;
+	private Button play_ring_button;
 	private Button white_noise_on_off_button;
 	private Button speaker_on_off_button;
 	private Button update_view_button;
@@ -79,6 +84,8 @@ public class MicApp extends Activity
 	private boolean sco_audio_state_received = false;
 	private int bt_headset_connection_state = BluetoothProfile.STATE_DISCONNECTED;
 	private int sco_audio_state = AudioManager.SCO_AUDIO_STATE_DISCONNECTED;
+
+	private MediaPlayer ring_tone = null;
 
 	///////////////////////////////////////////////////////
 	// ボリュームキーの監視
@@ -209,6 +216,12 @@ public class MicApp extends Activity
 			white_noise_on_off_button.setEnabled(false);
 		}
 
+		if (ring_tone == null) {
+			play_ring_button.setText("リングを再生する");
+		} else {
+			play_ring_button.setText("リングの再生を停止する");
+		}
+
 		if (!white_noise_on) {
 			white_noise_on_off_button.setText("ホワイトノイズを出力する");
 		} else {
@@ -326,6 +339,7 @@ public class MicApp extends Activity
 		handler = new Handler();
 		start_stop_button = (Button) findViewById(R.id.ToggleStartStopButton);
 		white_noise_on_off_button = (Button) findViewById(R.id.ToggleNoiseOnButton);
+		play_ring_button = (Button) findViewById(R.id.PlayRingButton);
 		speaker_on_off_button = (Button) findViewById(R.id.ToggleSpeakerOnButton);
 		update_view_button = (Button) findViewById(R.id.UpdateUIButton);
 		status_view = (TextView) findViewById(R.id.StatusView);
@@ -451,6 +465,31 @@ public class MicApp extends Activity
 		start_stop_button.setOnClickListener(new OnClickListener() {
 			public void onClick(View v) {
 				toggle_start_stop();
+			}
+		});
+
+		// RINGを再生開始・再生停止するボタン
+		play_ring_button.setOnClickListener(new OnClickListener() {
+			public void onClick(View v) {
+				if (ring_tone == null) {
+					ring_tone = new MediaPlayer();
+					ring_tone.setAudioStreamType(AudioManager.STREAM_RING);
+					Uri uri = RingtoneManager.getDefaultUri(RingtoneManager.TYPE_RINGTONE);
+					try {
+						ring_tone.setDataSource(getApplicationContext(), uri);
+						ring_tone.prepare();
+					} catch (Exception e) {
+						ring_tone = null;
+						return;
+					}
+					ring_tone.setLooping(true);
+					ring_tone.start();
+				} else {
+					ring_tone.stop();
+					ring_tone.release();
+					ring_tone = null;
+				}
+				update_view();
 			}
 		});
 

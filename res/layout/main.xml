@@ -184,6 +184,12 @@
 			</Button>
 			<Button
 				android:text="Button"
+				android:id="@+id/PlayRingButton"
+				android:layout_width="fill_parent"
+				android:layout_height="wrap_content">
+			</Button>
+			<Button
+				android:text="Button"
 				android:id="@+id/ToggleSpeakerOnButton"
 				android:layout_width="fill_parent"
 				android:layout_height="wrap_content">
