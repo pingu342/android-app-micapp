@@ -75,6 +75,8 @@ public class MicApp extends Activity
 	private BroadcastReceiver bluetooth_sco_monitor_bc_receiver = null;
 	private BroadcastReceiver bluetooth_headset_connection_monitor_bc_receiver = null;
 
+	private boolean bt_headset_connection_state_received = false;
+	private boolean sco_audio_state_received = false;
 	private int bt_headset_connection_state = BluetoothProfile.STATE_DISCONNECTED;
 	private int sco_audio_state = AudioManager.SCO_AUDIO_STATE_DISCONNECTED;
 
@@ -152,26 +154,36 @@ public class MicApp extends Activity
 			status += "Bluetooth A2DP：OFF \n";
 		}
 
-		if (bt_headset_connection_state == BluetoothProfile.STATE_DISCONNECTED) {
-			status += "Bluetooth Headset : DISCONNECTED \n";
-		} else if (bt_headset_connection_state == BluetoothProfile.STATE_DISCONNECTING) {
-			status += "Bluetooth Headset : DISCONNECTING \n";
-		} else if (bt_headset_connection_state == BluetoothProfile.STATE_CONNECTING) {
-			status += "Bluetooth Headset : CONNECTING \n";
-		} else if (bt_headset_connection_state == BluetoothProfile.STATE_CONNECTED) {
-			status += "Bluetooth Headset : CONNECTED \n";
+		status += "===BroadcastReceiver=== \n";
+
+		if (bt_headset_connection_state_received) {
+			if (bt_headset_connection_state == BluetoothProfile.STATE_DISCONNECTED) {
+				status += "Bluetooth Headset : DISCONNECTED \n";
+			} else if (bt_headset_connection_state == BluetoothProfile.STATE_DISCONNECTING) {
+				status += "Bluetooth Headset : DISCONNECTING \n";
+			} else if (bt_headset_connection_state == BluetoothProfile.STATE_CONNECTING) {
+				status += "Bluetooth Headset : CONNECTING \n";
+			} else if (bt_headset_connection_state == BluetoothProfile.STATE_CONNECTED) {
+				status += "Bluetooth Headset : CONNECTED \n";
+			} else {
+				status += "Bluetooth Headset : ? \n";
+			}
 		} else {
-			status += "Bluetooth Headset : ? \n";
+			status += "Bluetooth Headset : NOT_RECEIVED \n";
 		}
 
-		if (sco_audio_state == AudioManager.SCO_AUDIO_STATE_DISCONNECTED) {
-			status += "SCO Audio State : DISCONNECTED \n";
-		} else if (sco_audio_state == AudioManager.SCO_AUDIO_STATE_CONNECTING) {
-			status += "SCO Audio State : CONNECTING \n";
-		} else if (sco_audio_state == AudioManager.SCO_AUDIO_STATE_CONNECTED) {
-			status += "SCO Audio State : CONNECTED \n";
+		if (sco_audio_state_received) {
+			if (sco_audio_state == AudioManager.SCO_AUDIO_STATE_DISCONNECTED) {
+				status += "SCO Audio State : DISCONNECTED \n";
+			} else if (sco_audio_state == AudioManager.SCO_AUDIO_STATE_CONNECTING) {
+				status += "SCO Audio State : CONNECTING \n";
+			} else if (sco_audio_state == AudioManager.SCO_AUDIO_STATE_CONNECTED) {
+				status += "SCO Audio State : CONNECTED \n";
+			} else {
+				status += "SCO Audio State : ? \n";
+			}
 		} else {
-			status += "SCO Audio State : ? \n";
+			status += "SCO Audio State : NOT_RECEIVED \n";
 		}
 
 		//        if (audio_manager.isSpeakerphoneOn()) {
@@ -536,6 +548,7 @@ public class MicApp extends Activity
 		bluetooth_headset_connection_monitor_bc_receiver = new BroadcastReceiver() {
 			@Override
 			public void onReceive(Context context, Intent intent) {
+				bt_headset_connection_state_received = true;
 				bt_headset_connection_state = intent.getIntExtra(BluetoothProfile.EXTRA_STATE, 0);
 				//int previous_state = intent.getIntExtra(BluetoothProfile.EXTRA_PREVIOUS_STATE, 0);
 				BluetoothDevice bt_headset_device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
@@ -549,6 +562,7 @@ public class MicApp extends Activity
 		bluetooth_sco_monitor_bc_receiver = new BroadcastReceiver() {
 			@Override
 			public void onReceive(Context context, Intent intent) {
+				sco_audio_state_received = true;
 				sco_audio_state = intent.getIntExtra(AudioManager.EXTRA_SCO_AUDIO_STATE, 0);
 				//int previous_state = intent.getIntExtra(AudioManager.EXTRA_SCO_AUDIO_PREVIOUS_STATE, 0);
 				Log.d("sakalog", "intent(ACTION_SCO_AUDIO_STATE_CHANGED) received. " + (sco_audio_state==AudioManager.SCO_AUDIO_STATE_DISCONNECTED?"disconnected":(sco_audio_state==AudioManager.SCO_AUDIO_STATE_CONNECTING?"connecting":(sco_audio_state==AudioManager.SCO_AUDIO_STATE_CONNECTED?"connected":"?"))));
