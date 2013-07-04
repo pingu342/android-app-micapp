@@ -331,7 +331,7 @@ public class MicApp extends Activity
 		bluetooth_sco_on_checkbox = (CheckBox) findViewById(R.id.BluetoothScoOnCheckbox);
 
 		// ヘッドセット接続時に、自動的に本体スピーカーをOFFするかどうかのチェックボックス
-		auto_speaker_off_checkbox.setChecked(true);
+		auto_speaker_off_checkbox.setChecked(false);
 		auto_speaker_off_checkbox.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -339,7 +339,7 @@ public class MicApp extends Activity
 		});
 
 		// ヘッドセット取外し時に、自動的に本体スピーカーをONするかどうかのチェックボックス
-		auto_speaker_on_checkbox.setChecked(true);
+		auto_speaker_on_checkbox.setChecked(false);
 		auto_speaker_on_checkbox.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -348,7 +348,7 @@ public class MicApp extends Activity
 
 		// 本体スピーカーON/OFF変更時に、自動的にオーディオ入出力をリスタートするかどうかのチェックボックス
 		// リスタートとはAudioRecordクラスとAudioTrackクラスのオブジェクトをreleaseしてnewしなおすこと
-		audio_io_auto_restart_speaker_checkbox.setChecked(true);
+		audio_io_auto_restart_speaker_checkbox.setChecked(false);
 		audio_io_auto_restart_speaker_checkbox.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
@@ -356,7 +356,7 @@ public class MicApp extends Activity
 		});
 
 		// ヘッドセット接続状態変化時に、自動的にオーディオ入出力をリスタートするかどうかのチェックボックス
-		audio_io_auto_restart_headset_checkbox.setChecked(true);
+		audio_io_auto_restart_headset_checkbox.setChecked(false);
 		audio_io_auto_restart_headset_checkbox.setOnClickListener(new View.OnClickListener() {
 			@Override
 			public void onClick(View v) {
