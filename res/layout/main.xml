@@ -7,7 +7,7 @@
 		android:layout_width="fill_parent" 
 		android:layout_height="wrap_content" 
 		android:text="TextView"
-		android:textSize="18sp"
+		android:textSize="8sp"
 		android:layout_margin="5dip"
 		android:id="@+id/StatusView" />
 	<ScrollView
@@ -104,7 +104,7 @@
 				android:layout_height="wrap_content" 
 				android:textSize="18sp"
 				android:layout_margin="5dip"
-				android:text="ヘッドセット監視方法：" />
+				android:text="有線ヘッドセット監視方法：" />
 			<RadioGroup android:id="@+id/HeadsetMoniteringMethodRadioGroup"
 				android:layout_width="fill_parent"
 				android:layout_height="wrap_content">
@@ -153,7 +153,7 @@
 			<CheckBox android:id="@+id/AudioIOAutoRestart_Speaker_Checkbox"
 				android:layout_width="fill_parent"
 				android:layout_height="wrap_content"
-				android:text="スピーカーON/OFF変更時は自動的にオーディオ入出力をリスタート" />
+				android:text="スピーカーON/OFF変更時はオーディオ入出力を停止" />
 			<CheckBox android:id="@+id/AudioIOAutoRestart_Headset_Checkbox"
 				android:layout_width="fill_parent"
 				android:layout_height="wrap_content"

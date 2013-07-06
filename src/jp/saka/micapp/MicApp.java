@@ -69,7 +69,6 @@ public class MicApp extends Activity
 	private AudioManager audio_manager;
 	private Handler handler;
 	private boolean audio_io_thread_loop;
-	private static BroadcastReceiver headset_monitering_bc_receiver = null;
 	private MicApp micapp_activity;
 	private String toast_msg;
 	private boolean is_wired_headset_plugged = false;
@@ -77,13 +76,18 @@ public class MicApp extends Activity
 	private int audio_read_bytes = 0;
 	private int audio_write_bytes = 0;
 
-	private BroadcastReceiver bluetooth_sco_monitor_bc_receiver = null;
-	private BroadcastReceiver bluetooth_headset_connection_monitor_bc_receiver = null;
+	private BroadcastReceiver wired_headset_plug_broadcast_receiver = null;
+	private BroadcastReceiver bluetooth_sco_audio_state_broadcast_receiver = null;
+	private BroadcastReceiver bluetooth_headset_connection_state_broadcast_receiver = null;
 
-	private boolean bt_headset_connection_state_received = false;
-	private boolean sco_audio_state_received = false;
-	private int bt_headset_connection_state = BluetoothProfile.STATE_DISCONNECTED;
-	private int sco_audio_state = AudioManager.SCO_AUDIO_STATE_DISCONNECTED;
+	private boolean is_wired_headset_plug_broadcast_received = false;
+	private boolean is_bluetooth_headset_connection_state_broadcast_received = false;
+	private boolean is_bluetooth_sco_audio_state_broadcast_received = false;
+	private int wired_headset_plug_state_broadcast_received = 0;
+	private String wired_headset_plug_name_broadcast_received = "?";
+	private int wired_headset_plug_microphone_broadcast_received = 0;
+	private int bluetooth_headset_connection_state_broadcast_received = BluetoothProfile.STATE_DISCONNECTED;
+	private int bluetooth_sco_audio_state_broadcast_received = AudioManager.SCO_AUDIO_STATE_DISCONNECTED;
 
 	private MediaPlayer ring_tone = null;
 
@@ -163,14 +167,26 @@ public class MicApp extends Activity
 
 		status += "===BroadcastReceiver=== \n";
 
-		if (bt_headset_connection_state_received) {
-			if (bt_headset_connection_state == BluetoothProfile.STATE_DISCONNECTED) {
+		if (is_wired_headset_plug_broadcast_received) {
+			if (wired_headset_plug_state_broadcast_received == 0) {
+				status += "Wired Headset : UNPLUGGED \n";
+			} else if (wired_headset_plug_state_broadcast_received == 1) {
+				status += "Wired Headset : PLUGGED (NAME=" + wired_headset_plug_name_broadcast_received + ", MICROPHONE=" + ((wired_headset_plug_microphone_broadcast_received==1)?"あり":"なし") + ")\n";
+			} else {
+				status += "Wired Headset : ? \n";
+			}
+		} else {
+			status += "Wired Headset : NOT_RECEIVED \n";
+		}
+
+		if (is_bluetooth_headset_connection_state_broadcast_received) {
+			if (bluetooth_headset_connection_state_broadcast_received == BluetoothProfile.STATE_DISCONNECTED) {
 				status += "Bluetooth Headset : DISCONNECTED \n";
-			} else if (bt_headset_connection_state == BluetoothProfile.STATE_DISCONNECTING) {
+			} else if (bluetooth_headset_connection_state_broadcast_received == BluetoothProfile.STATE_DISCONNECTING) {
 				status += "Bluetooth Headset : DISCONNECTING \n";
-			} else if (bt_headset_connection_state == BluetoothProfile.STATE_CONNECTING) {
+			} else if (bluetooth_headset_connection_state_broadcast_received == BluetoothProfile.STATE_CONNECTING) {
 				status += "Bluetooth Headset : CONNECTING \n";
-			} else if (bt_headset_connection_state == BluetoothProfile.STATE_CONNECTED) {
+			} else if (bluetooth_headset_connection_state_broadcast_received == BluetoothProfile.STATE_CONNECTED) {
 				status += "Bluetooth Headset : CONNECTED \n";
 			} else {
 				status += "Bluetooth Headset : ? \n";
@@ -179,12 +195,12 @@ public class MicApp extends Activity
 			status += "Bluetooth Headset : NOT_RECEIVED \n";
 		}
 
-		if (sco_audio_state_received) {
-			if (sco_audio_state == AudioManager.SCO_AUDIO_STATE_DISCONNECTED) {
+		if (is_bluetooth_sco_audio_state_broadcast_received) {
+			if (bluetooth_sco_audio_state_broadcast_received == AudioManager.SCO_AUDIO_STATE_DISCONNECTED) {
 				status += "SCO Audio State : DISCONNECTED \n";
-			} else if (sco_audio_state == AudioManager.SCO_AUDIO_STATE_CONNECTING) {
+			} else if (bluetooth_sco_audio_state_broadcast_received == AudioManager.SCO_AUDIO_STATE_CONNECTING) {
 				status += "SCO Audio State : CONNECTING \n";
-			} else if (sco_audio_state == AudioManager.SCO_AUDIO_STATE_CONNECTED) {
+			} else if (bluetooth_sco_audio_state_broadcast_received == AudioManager.SCO_AUDIO_STATE_CONNECTED) {
 				status += "SCO Audio State : CONNECTED \n";
 			} else {
 				status += "SCO Audio State : ? \n";
@@ -584,33 +600,77 @@ public class MicApp extends Activity
 
 		IntentFilter intent_filter;
 		
-		bluetooth_headset_connection_monitor_bc_receiver = new BroadcastReceiver() {
+		bluetooth_headset_connection_state_broadcast_receiver = new BroadcastReceiver() {
 			@Override
 			public void onReceive(Context context, Intent intent) {
-				bt_headset_connection_state_received = true;
-				bt_headset_connection_state = intent.getIntExtra(BluetoothProfile.EXTRA_STATE, 0);
+				is_bluetooth_headset_connection_state_broadcast_received = true;
+				bluetooth_headset_connection_state_broadcast_received = intent.getIntExtra(BluetoothProfile.EXTRA_STATE, 0);
 				//int previous_state = intent.getIntExtra(BluetoothProfile.EXTRA_PREVIOUS_STATE, 0);
 				BluetoothDevice bt_headset_device = intent.getParcelableExtra(BluetoothDevice.EXTRA_DEVICE);
-				Log.d("sakalog", "intent(ACTION_CONNECTION_STATE_CHANGED) received. " + (bt_headset_connection_state==BluetoothProfile.STATE_DISCONNECTED?"disconnected":(bt_headset_connection_state==BluetoothProfile.STATE_CONNECTING?"connecting":(bt_headset_connection_state==BluetoothProfile.STATE_CONNECTED?"connected":(bt_headset_connection_state==BluetoothProfile.STATE_DISCONNECTING?"disconnecting":"?")))));
+				Log.d("sakalog", "intent(ACTION_CONNECTION_STATE_CHANGED) received. " + (bluetooth_headset_connection_state_broadcast_received==BluetoothProfile.STATE_DISCONNECTED?"disconnected":(bluetooth_headset_connection_state_broadcast_received==BluetoothProfile.STATE_CONNECTING?"connecting":(bluetooth_headset_connection_state_broadcast_received==BluetoothProfile.STATE_CONNECTED?"connected":(bluetooth_headset_connection_state_broadcast_received==BluetoothProfile.STATE_DISCONNECTING?"disconnecting":"?")))));
 				update_view();
 			}
 		};
 		intent_filter = new IntentFilter(android.bluetooth.BluetoothHeadset.ACTION_CONNECTION_STATE_CHANGED);
-		registerReceiver(bluetooth_headset_connection_monitor_bc_receiver, intent_filter);
+		registerReceiver(bluetooth_headset_connection_state_broadcast_receiver, intent_filter);
 
-		bluetooth_sco_monitor_bc_receiver = new BroadcastReceiver() {
+		bluetooth_sco_audio_state_broadcast_receiver = new BroadcastReceiver() {
 			@Override
 			public void onReceive(Context context, Intent intent) {
-				sco_audio_state_received = true;
-				sco_audio_state = intent.getIntExtra(AudioManager.EXTRA_SCO_AUDIO_STATE, 0);
+				is_bluetooth_sco_audio_state_broadcast_received = true;
+				bluetooth_sco_audio_state_broadcast_received = intent.getIntExtra(AudioManager.EXTRA_SCO_AUDIO_STATE, 0);
 				//int previous_state = intent.getIntExtra(AudioManager.EXTRA_SCO_AUDIO_PREVIOUS_STATE, 0);
-				Log.d("sakalog", "intent(ACTION_SCO_AUDIO_STATE_CHANGED) received. " + (sco_audio_state==AudioManager.SCO_AUDIO_STATE_DISCONNECTED?"disconnected":(sco_audio_state==AudioManager.SCO_AUDIO_STATE_CONNECTING?"connecting":(sco_audio_state==AudioManager.SCO_AUDIO_STATE_CONNECTED?"connected":"?"))));
+				Log.d("sakalog", "intent(ACTION_SCO_AUDIO_STATE_CHANGED) received. " + (bluetooth_sco_audio_state_broadcast_received==AudioManager.SCO_AUDIO_STATE_DISCONNECTED?"disconnected":(bluetooth_sco_audio_state_broadcast_received==AudioManager.SCO_AUDIO_STATE_CONNECTING?"connecting":(bluetooth_sco_audio_state_broadcast_received==AudioManager.SCO_AUDIO_STATE_CONNECTED?"connected":"?"))));
 				update_view();
 			}
 		};
 		//IntentFilter intent_filter = new IntentFilter(AudioManager.ACTION_SCO_AUDIO_STATE_CHANGED); //deprecated in API level 14
 		intent_filter = new IntentFilter(AudioManager.ACTION_SCO_AUDIO_STATE_UPDATED);
-		registerReceiver(bluetooth_sco_monitor_bc_receiver, intent_filter);
+		registerReceiver(bluetooth_sco_audio_state_broadcast_receiver, intent_filter);
+
+		wired_headset_plug_broadcast_receiver = new BroadcastReceiver() {
+			@Override
+			public void onReceive(Context context, Intent intent) {
+				is_wired_headset_plug_broadcast_received = true;
+				wired_headset_plug_state_broadcast_received = intent.getIntExtra("state", 0);
+				wired_headset_plug_name_broadcast_received = intent.getStringExtra("name");
+				wired_headset_plug_microphone_broadcast_received = intent.getIntExtra("microphone", 0);
+
+				int radio_id = headset_monitering_method_radio_group.getCheckedRadioButtonId();
+				if (radio_id == R.id.HeadsetMoniteringMethodRadioButton_BroadcastReceiver1 ||
+					radio_id == R.id.HeadsetMoniteringMethodRadioButton_BroadcastReceiver2) {
+
+					boolean is_wired_headset_on = audio_manager.isWiredHeadsetOn();
+					boolean is_headset_plugged_now = false;
+					if (radio_id == R.id.HeadsetMoniteringMethodRadioButton_BroadcastReceiver1) {
+						// BroadcastReceiverを信じる
+						is_headset_plugged_now = (wired_headset_plug_state_broadcast_received > 0);
+					} else if (radio_id == R.id.HeadsetMoniteringMethodRadioButton_BroadcastReceiver2) {
+						// isWiredHeadsetOnを信じる
+						is_headset_plugged_now = is_wired_headset_on;
+					}
+
+					if (!is_wired_headset_plugged && is_headset_plugged_now) {
+						// 接続された
+						is_wired_headset_plugged = true;
+						Toast.makeText(micapp_activity, "有線ヘッドセット接続イベント：接続されました", Toast.LENGTH_SHORT).show();
+						update_speakerphone();
+					} else if (is_wired_headset_plugged && !is_headset_plugged_now) {
+						// 取り外された
+						is_wired_headset_plugged = false;
+						Toast.makeText(micapp_activity, "有線ヘッドセット接続イベント：取り外されました", Toast.LENGTH_SHORT).show();
+						update_speakerphone();
+					} else {
+						// 状態変化なし
+						Toast.makeText(micapp_activity, "有線ヘッドセット接続イベント：状態変化なし", Toast.LENGTH_SHORT).show();
+					}
+				}
+
+				update_view();
+			}
+		};
+		intent_filter = new IntentFilter(Intent.ACTION_HEADSET_PLUG);
+		registerReceiver(wired_headset_plug_broadcast_receiver, intent_filter);
 
 		// テキストビュー、ボタン、ラジオボタン、シークバーの表示を更新する
 		update_view();
@@ -619,17 +679,17 @@ public class MicApp extends Activity
 	@Override
 	public void onDestroy() {
 		super.onDestroy();
-		if (headset_monitering_bc_receiver != null) {
-			unregisterReceiver(headset_monitering_bc_receiver);
-			headset_monitering_bc_receiver = null;
+		if (wired_headset_plug_broadcast_receiver != null) {
+			unregisterReceiver(wired_headset_plug_broadcast_receiver);
+			wired_headset_plug_broadcast_receiver = null;
 		}
-		if (bluetooth_sco_monitor_bc_receiver != null) {
-			unregisterReceiver(bluetooth_sco_monitor_bc_receiver);
-			bluetooth_sco_monitor_bc_receiver = null;
+		if (bluetooth_sco_audio_state_broadcast_receiver != null) {
+			unregisterReceiver(bluetooth_sco_audio_state_broadcast_receiver);
+			bluetooth_sco_audio_state_broadcast_receiver = null;
 		}
-		if (bluetooth_headset_connection_monitor_bc_receiver != null) {
-			unregisterReceiver(bluetooth_headset_connection_monitor_bc_receiver);
-			bluetooth_headset_connection_monitor_bc_receiver = null;
+		if (bluetooth_headset_connection_state_broadcast_receiver != null) {
+			unregisterReceiver(bluetooth_headset_connection_state_broadcast_receiver);
+			bluetooth_headset_connection_state_broadcast_receiver = null;
 		}
 		headset_moniter_thread_loop = false;
 		audio_io_thread_loop = false;
@@ -641,102 +701,62 @@ public class MicApp extends Activity
 		if ((radio_id == R.id.HeadsetMoniteringMethodRadioButton_BroadcastReceiver1) ||
 				(radio_id == R.id.HeadsetMoniteringMethodRadioButton_BroadcastReceiver2)) {
 
-			// Wiredヘッドセットの挿抜を監視して、本体スピーカーのON/OFFを切り替える
+			// ヘッドセット監視スレッドを終了させる
+			// BroadcastReceiverでスピーカーON/OFFを切り替える
 			headset_moniter_thread_loop = false;
-			if (headset_monitering_bc_receiver == null) {
-				headset_monitering_bc_receiver = new BroadcastReceiver() {
-					@Override
-					public void onReceive(Context context, Intent intent) {
 
-						boolean is_wired_headset_on = audio_manager.isWiredHeadsetOn();
-						int state = intent.getIntExtra("state", 0);
-
-						boolean is_headset_plugged_now = false;
-						int radio_id = headset_monitering_method_radio_group.getCheckedRadioButtonId();
-						if (radio_id == R.id.HeadsetMoniteringMethodRadioButton_BroadcastReceiver1) {
-							// BroadcastReceiverを信じる
-							is_headset_plugged_now = (state > 0);
-						} else if (radio_id == R.id.HeadsetMoniteringMethodRadioButton_BroadcastReceiver2) {
-							// isWiredHeadsetOnを信じる
-							is_headset_plugged_now = is_wired_headset_on;
-						}
-
-						if (!is_wired_headset_plugged && is_headset_plugged_now) {
-							// 接続された
-							is_wired_headset_plugged = true;
-							Toast.makeText(micapp_activity, "ヘッドセットイベント：接続されました (State=" + state + " HeadsetOn=" + is_wired_headset_on + ")", Toast.LENGTH_SHORT).show();
-						} else if (is_wired_headset_plugged && !is_headset_plugged_now) {
-							// 取り外された
-							is_wired_headset_plugged = false;
-							Toast.makeText(micapp_activity, "ヘッドセットイベント：取り外されました (State=" + state + " HeadsetOn=" + is_wired_headset_on + ")", Toast.LENGTH_SHORT).show();
-						} else {
-							// 状態変化なし
-							Toast.makeText(micapp_activity, "ヘッドセットイベント：状態変化なし (State=" + state + " HeadsetOn=" + is_wired_headset_on + ")", Toast.LENGTH_SHORT).show();
-							return;
-						}
-
-						update_speakerphone();
-					}
-				};
-
-				IntentFilter intent_filter = new IntentFilter(Intent.ACTION_HEADSET_PLUG);
-				registerReceiver(headset_monitering_bc_receiver, intent_filter);
-			}
 		} else if (radio_id == R.id.HeadsetMoniteringMethodRadioButton_Polling) {
-			if (headset_monitering_bc_receiver != null) {
-				unregisterReceiver(headset_monitering_bc_receiver);
-				headset_monitering_bc_receiver = null;
 
-				// ヘッドセット監視スレッドを開始する
-				if (!headset_moniter_thread_loop) {
+			// ヘッドセット監視スレッドを開始する
+			// ヘッドセット監視スレッドでスピーカーON/OFFを切り替える
+			if (!headset_moniter_thread_loop) {
 
-					headset_moniter_thread_loop = true;
+				headset_moniter_thread_loop = true;
 
-					(new Thread(new Runnable() {
-						@Override
-						public void run() {
-							Log.d("sakalog", "headset monitoring thread: hello.");
+				(new Thread(new Runnable() {
+					@Override
+					public void run() {
+						Log.d("sakalog", "headset monitoring thread: hello.");
 
-							while (headset_moniter_thread_loop) {
+						while (headset_moniter_thread_loop) {
 
-								boolean is_wired_headset_on = audio_manager.isWiredHeadsetOn();
+							boolean is_wired_headset_on = audio_manager.isWiredHeadsetOn();
 
-								if (!is_wired_headset_plugged && is_wired_headset_on) {
-									// 接続された
-									is_wired_headset_plugged = true;
+							if (!is_wired_headset_plugged && is_wired_headset_on) {
+								// 接続された
+								is_wired_headset_plugged = true;
 
-									handler.post( new Runnable() {
-										public void run() {
-											Log.d("sakalog", "headset monitoring thread: headset connected.");
-											Toast.makeText(micapp_activity, "ヘッドセットポーリング：接続されました", Toast.LENGTH_SHORT).show();
-											update_speakerphone();
-										}
-									});
-								} else if (is_wired_headset_plugged && !is_wired_headset_on) {
-									// 取り外された
-									is_wired_headset_plugged = false;
+								handler.post( new Runnable() {
+									public void run() {
+										Log.d("sakalog", "headset monitoring thread: headset connected.");
+										Toast.makeText(micapp_activity, "有線ヘッドセットポーリング：接続されました", Toast.LENGTH_SHORT).show();
+										update_speakerphone();
+									}
+								});
+							} else if (is_wired_headset_plugged && !is_wired_headset_on) {
+								// 取り外された
+								is_wired_headset_plugged = false;
 
-									handler.post( new Runnable() {
-										public void run() {
-											Log.d("sakalog", "headset monitoring thread: headset disconnected.");
-											Toast.makeText(micapp_activity, "ヘッドセットポーリング：取り外されました", Toast.LENGTH_SHORT).show();
-											update_speakerphone();
-										}
-									});
-								} else {
-									// 状態変化なし
-								}
-
-								try {
-									Thread.sleep(200, 0);
-								} catch (InterruptedException e) {
-								}
+								handler.post( new Runnable() {
+									public void run() {
+										Log.d("sakalog", "headset monitoring thread: headset disconnected.");
+										Toast.makeText(micapp_activity, "有線ヘッドセットポーリング：取り外されました", Toast.LENGTH_SHORT).show();
+										update_speakerphone();
+									}
+								});
+							} else {
+								// 状態変化なし
 							}
 
-							Log.d("sakalog", "headset monitoring thread: bye.");
+							try {
+								Thread.sleep(200, 0);
+							} catch (InterruptedException e) {
+							}
 						}
-					})).start();
-				}
+
+						Log.d("sakalog", "headset monitoring thread: bye.");
+					}
+				})).start();
 			}
 		}
 	}
